@@ -13,6 +13,8 @@ This the repository which implements late temporal modeling on top of the 3D CNN
 	#Then you can activate the environment with the command
 	conda activate LateTemporalModeling3D
 
+#There's a known error when creating the env, where it crashes with the requirement fvcore==0.1. In the issue assigned to such crash, people suggest to just install one by one all the dependencies.
+
 Later, please download the necessary files from the link, and copy them into the main directory.
 https://1drv.ms/u/s!AqKP51Rjkz1Gaifd54VbdRBn6qM?e=7OxYLa
 
