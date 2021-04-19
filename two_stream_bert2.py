@@ -167,6 +167,8 @@ def main():
         optimizer, 'min', patience=5, verbose=True)
     
 
+    #TODO: Improve the sorting of directories given the arg of the dataset
+
     print("Saving everything to directory %s." % (saveLocation))
     if args.dataset=='ucf101':
         dataset='./datasets/ucf101_frames'
