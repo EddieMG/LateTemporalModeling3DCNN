@@ -68,6 +68,7 @@ class ToTensor2(object):
     def __call__(self, clips):
         if isinstance(clips, np.ndarray):
             # handle numpy array
+            #print(type(clips.transpose((2, 0, 1))))
             clips = torch.from_numpy(clips.transpose((2, 0, 1)))
             # backward compatibility
             return clips.float().div(1.0)

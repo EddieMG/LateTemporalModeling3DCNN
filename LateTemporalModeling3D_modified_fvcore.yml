@@ -171,7 +171,7 @@ dependencies:
     - freetype-py==2.1.0.post1
     - fuel==0.2.0
     - future==0.17.1
-    - fvcore==0.1
+    - fvcore==0.1.3.post20210227
     - gast==0.2.0
     - google-auth==1.9.0
     - google-auth-oauthlib==0.4.1
@@ -194,7 +194,7 @@ dependencies:
     - numexpr==2.6.9
     - numpy==1.15.0
     - oauthlib==3.1.0
-    - object-detection==0.1
+    - object-detection==0.0.3
     - opencv-contrib-python==4.1.2.30
     - pandas==0.24.1
     - parso==0.5.1
@@ -216,7 +216,6 @@ dependencies:
     - pytorch-swats==0.1.0
     - pyyaml==3.13
     - requests-oauthlib==1.3.0
-    - roi-align==0.0.2
     - rsa==4.0
     - scikit-image==0.14.2
     - scipy==1.1.0

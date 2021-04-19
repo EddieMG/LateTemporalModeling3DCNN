@@ -221,7 +221,7 @@ def VideoSpatialPrediction3D_bert(
             img_y = cv2.imread(flow_y_file, cv2.IMREAD_GRAYSCALE)
             img_x = np.expand_dims(img_x,-1)
             img_y = np.expand_dims(img_y,-1)
-            img = np.concatenate((img_x,img_y),2)    
+            img = np.concatenate((img_x,img_y),2) #2 from repo    
             img = cv2.resize(img, dims[1::-1],interpolation)
             img_flip = img[:,::-1,:].copy()
         #img_flip2 = img2[:,::-1,:].copy()

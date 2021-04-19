@@ -12,6 +12,8 @@ import argparse
 import shutil
 import numpy as np
 
+import matplotlib.pyplot as plt
+
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
@@ -28,9 +30,12 @@ from torch.optim import lr_scheduler
 import video_transforms
 import models
 import datasets
-import swats
+#import swats
 from opt.AdamW import AdamW
-from weights.model_path import rgb_3d_model_path_selection
+#from weights.model_path import rgb_3d_model_path_selection
+from utils.model_path import rgb_3d_model_path_selection
+
+
 
 
 model_names = sorted(name for name in models.__dict__
@@ -48,7 +53,7 @@ parser.add_argument('--settings', metavar='DIR', default='./datasets/settings',
 #                    choices=["rgb", "flow"],
 #                    help='modality: rgb | flow')
 parser.add_argument('--dataset', '-d', default='hmdb51',
-                    choices=["ucf101", "hmdb51", "smtV2", "window"],
+                    choices=["ucf101", "hmdb51", "smtV2", "window", "eurecat"],
                     help='dataset: ucf101 | hmdb51 | smtV2')
 
 parser.add_argument('--arch', '-a', default='rgb_resneXt3D64f101_bert10_FRMB',
@@ -171,6 +176,8 @@ def main():
         dataset='./datasets/smtV2_frames'
     elif args.dataset=='window':
         dataset='./datasets/window_frames'
+    elif args.dataset=='eurecat':
+        dataset='./datasets/eurecat_frames'
     else:
         print("No convenient dataset entered, exiting....")
         return 0
@@ -398,6 +405,9 @@ def build_model():
     elif args.dataset=='window':
         print('model path is: %s' %(model_path))
         model = models.__dict__[args.arch](modelPath=model_path, num_classes=3, length=args.num_seg)
+    elif args.dataset=='eurecat':
+        print('model path is: %s' %(model_path))
+        model = models.__dict__[args.arch](modelPath=model_path, num_classes=11, length=args.num_seg)
     
     if torch.cuda.device_count() > 1:
         model=torch.nn.DataParallel(model)
@@ -453,7 +463,7 @@ def train(train_loader, model, criterion, criterion2, optimizer, epoch,modality)
     top1 = AverageMeter()
     top3 = AverageMeter()
     
-
+    print(model)
     # switch to train mode
     model.train()
 
@@ -464,6 +474,11 @@ def train(train_loader, model, criterion, criterion2, optimizer, epoch,modality)
     acc_mini_batch_top3 = 0.0
     totalSamplePerIter=0
     for i, (inputs, targets) in enumerate(train_loader):
+        print(inputs.size())
+        print(inputs[0].size())
+        plt.imshow(inputs[0].size())
+        plt.show()
+        
         if modality == "rgb" or modality == "pose":
             if "3D" in args.arch or "r2plus1d" in args.arch or 'slowfast' in args.arch:
                 inputs=inputs.view(-1,length,3,input_size,input_size).transpose(1,2)
@@ -481,6 +496,7 @@ def train(train_loader, model, criterion, criterion2, optimizer, epoch,modality)
             inputs = inputs.cuda()
         targets = targets.cuda()
         output, input_vectors, sequenceOut, maskSample = model(inputs)
+        print(model.ResNeXtBottleneck1.conv1.weight.grad) 
         
 #        maskSample=maskSample.cuda()
 #        input_vectors=(1-maskSample[:,1:]).unsqueeze(2)*input_vectors
@@ -494,7 +510,6 @@ def train(train_loader, model, criterion, criterion2, optimizer, epoch,modality)
         prec1, prec3 = accuracy(output.data, targets, topk=(1, 3))
         acc_mini_batch += prec1.item()
         acc_mini_batch_top3 += prec3.item()
-        
         lossClassification = criterion(output, targets)
         
         lossClassification = lossClassification / args.iter_size
@@ -529,6 +544,7 @@ def train(train_loader, model, criterion, criterion2, optimizer, epoch,modality)
     writer.add_scalar('data/classification_loss_training', lossesClassification.avg, epoch)
     writer.add_scalar('data/top1_training', top1.avg, epoch)
     writer.add_scalar('data/top3_training', top3.avg, epoch)
+
 def validate(val_loader, model, criterion,criterion2,modality):
     batch_time = AverageMeter()
     lossesClassification = AverageMeter()
@@ -560,7 +576,7 @@ def validate(val_loader, model, criterion,criterion2,modality):
             # compute output
             output, input_vectors, sequenceOut, _ = model(inputs)
             
-            
+           
             lossClassification = criterion(output, targets)
     
             # measure accuracy and record loss
