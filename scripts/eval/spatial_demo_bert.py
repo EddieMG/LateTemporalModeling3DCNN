@@ -29,6 +29,20 @@ from VideoSpatialPrediction3D_bert import VideoSpatialPrediction3D_bert
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   
 os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
+list_tasks_dict = {
+                'Idle_standing':0,
+                'Idle_sitting':1,
+                'Changing_location':2, 
+                'Picking_object':3,
+                'Transporting_object':4,
+                'Placing_object':5,
+                'Quality_Inspection':6,
+                'Applying_adhesive':7, 
+                'Pre_setting':8,
+                'Cleaning_surface':9,
+                'Spreading_silicone':10
+}
+list_tasks = list(list_tasks_dict.keys())
 model_names = sorted(name for name in models.__dict__
     if not name.startswith("__")
     and callable(models.__dict__[name]))
@@ -38,7 +52,7 @@ dataset_names = sorted(name for name in datasets.__all__)
 parser = argparse.ArgumentParser(description='PyTorch Two-Stream Action Recognition RGB Test Case')
 
 parser.add_argument('--dataset', '-d', default='hmdb51',
-                    choices=["ucf101", "hmdb51"],
+                    choices=["ucf101", "hmdb51","eurecat"],
                     help='dataset: ucf101 | hmdb51')
 parser.add_argument('--arch', '-a', metavar='ARCH', default='rgb_resneXt3D64f101_bert10_FRMB',
                     choices=model_names)
@@ -55,9 +69,9 @@ parser.add_argument('-v', '--val', dest='window_val', action='store_true',
 
 multiGPUTest = False
 multiGPUTrain = False
-ten_crop_enabled = True
+ten_crop_enabled = False
 num_seg=16
-num_seg_3D=1
+num_seg_3D=3
 
 result_dict = {}
 
@@ -107,6 +121,8 @@ def main():
         frameFolderName = "smtV2_frames"
     elif args.dataset=='window':
         frameFolderName = "window_frames"
+    elif args.dataset=='eurecat':
+        frameFolderName="eurecat_frames"
     data_dir=os.path.join(datasetFolder,frameFolderName)
     
 
@@ -134,6 +150,8 @@ def main():
         num_categories = 174
     elif args.dataset=='window':
         num_categories = 3
+    elif args.dataset=='eurecat':
+        num_categories = 11
         
 
     model_start_time = time.time()
@@ -168,7 +186,9 @@ def main():
         
         start = time.time()
         
-
+        print("Clip to be infered:"+clip_path)
+        print("duration : {}".format(duration))
+        
         spatial_prediction = VideoSpatialPrediction3D_bert(
             clip_path,
             spatial_net,
@@ -186,11 +206,15 @@ def main():
         estimatedTime=end-start
         timeList.append(estimatedTime)
         
-        pred_index, mean_result, top3 = spatial_prediction
+        pred_index, mean_result, top3_clips,top3 = spatial_prediction
 
             
-        print("Sample %d/%d: GT: %d, Prediction: %d" % (line_id, len(val_list), input_video_label, pred_index))
+        print("Sample %d/%d: GT: %d" % (line_id, len(val_list), input_video_label))
+        print("Prediction for clip 1: ",list_tasks[pred_index[0]])
+        print("Prediction for clip 2: ",list_tasks[pred_index[1]])
+        print("Prediction for clip 3: ",list_tasks[pred_index[2]])
         print("Estimated Time  %0.4f" % estimatedTime)
+        print("Top3 for each clip",top3_clips)
         print("------------------")
         if pred_index == input_video_label:
             match_count += 1

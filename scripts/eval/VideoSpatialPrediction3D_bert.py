@@ -188,7 +188,7 @@ def VideoSpatialPrediction3D_bert(
             if moded_loaded_frame_index == 0:
                 moded_loaded_frame_index = (duration + 1)
             offsets.append(moded_loaded_frame_index)
-             
+    print(offsets)         
     imageList=[]
     imageList1=[]
     imageList2=[]
@@ -208,7 +208,8 @@ def VideoSpatialPrediction3D_bert(
         if 'rgb' in architecture_name or 'pose' in architecture_name:
             img_file = os.path.join(vid_name, extension.format(index))
             img = cv2.imread(img_file, cv2.IMREAD_UNCHANGED)
-    
+            # cv2.imshow('dd',img)
+            # print(img_file)
             img = cv2.resize(img, dims[1::-1],interpolation)
     
             #img2 = cv2.resize(img, dims2[1::-1],interpolation)
@@ -246,6 +247,7 @@ def VideoSpatialPrediction3D_bert(
     #imageList=imageList11+imageList12
     
     rgb_list=[]     
+    print("image length ",len(imageList))
 
     for i in range(len(imageList)):
         cur_img = imageList[i]
@@ -266,9 +268,22 @@ def VideoSpatialPrediction3D_bert(
         else:
             output = net(imgDataTensor)
 #        outputSoftmax=soft(output)
-        result = output.data.cpu().numpy()
-        mean_result=np.mean(result,0)
-        prediction=np.argmax(mean_result)
-        top3 = mean_result.argsort()[::-1][:3]
         
-    return prediction, mean_result, top3
+        if type(output) == tuple:
+            output  = output[0]
+        # print(output)
+        # print(output.shape)
+        # print(output.__dict__)
+        result = output.data.cpu().numpy()
+        print(result)
+        mean_result=np.mean(result,0)
+        # print("mean result",mean_result)
+        prediction=np.argmax(mean_result)
+        # print(result[0])
+        # print(np.argmax(result[0]))
+        prediction=[np.argmax(logits) for logits in result]
+        # print("prediction", prediction)
+        top3_combined = mean_result.argsort()[::-1][:3]
+        top3 = [logits.argsort()[::-1][:3] for logits in result]
+        
+    return prediction, mean_result, top3, top3_combined
